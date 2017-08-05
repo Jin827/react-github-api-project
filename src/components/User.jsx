@@ -1,16 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router';
 
+
 class User extends React.Component {
     constructor() {
         super();
         this.state = {};
+
+
     }
 
     /*
     This method will be called by React after the first render. It's a perfect place to load
     data with AJAX. This User component gets mounted in the DOM as soon as the URL is /user/:username
-
     When that happens, react-router will pass a `params` prop containing every parameter in the URL, just like
     when we get URL parameters in Express with req.params. Here, it's this.props.params. Since we called our route
     parameter `username`, it's available under this.props.params.username
@@ -19,19 +21,31 @@ class User extends React.Component {
     the data -- in the callback -- we call `setState` to put the user data in our state. This will trigger a re-render.
     When `render` gets called again, `this.state.user` exists and we get the user info display instead of "LOADING..."
     */
+    componentDidUpdate(prevProps) {
+      if(prevProps.params.username !== this.props.params.username){
+        this.fetchData();
+      }
+    }
+
     componentDidMount() {
-        fetch(`https://api.github.com/users/${this.props.params.username}`)
+      this.fetchData()
+    }
+
+    fetchData = () => {
+      var API_KEY = `ab5d3b85fd8e727a1aab75a606f8ba0f2930ce47`;
+      var url = ` https://api.github.com/users/${this.props.params.username}?/access_token=${API_KEY}`;
+        fetch(url)
         .then(response => response.json())
         .then(
             user => {
-                // How can we use `this` inside a callback without binding it??
-                // Make sure you understand this fundamental difference with arrow functions!!!
                 this.setState({
                     user: user
                 });
             }
         );
     }
+
+
 
     /*
     This method is used as a mapping function. Eventually this could be factored out to its own component.
@@ -48,6 +62,7 @@ class User extends React.Component {
     }
 
     render() {
+        
         // If the state doesn't have a user key, it means the AJAX didn't complete yet. Simply render a LOADING indicator.
         if (!this.state.user) {
             return (<div className="user-page">LOADING...</div>);
@@ -88,6 +103,13 @@ class User extends React.Component {
                     <ul className="user-info__stats">
                         {stats.map(this.renderStat)}
                     </ul>
+                </div>
+                <div>
+                    {this.props.children}
+                    {/* user clicks on FOLLOWERS, get redirected to /user/gaearon/follower.
+                      React Router  1. keeps the instance of userMounted
+                                    2. passes it a new instance of Followers AS " this.props.children "
+                      The Followers instance is mounted, it's componentDidMount kicks in, fetching the followers data.*/}
                 </div>
             </div>
         );
